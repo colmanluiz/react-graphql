@@ -1,8 +1,8 @@
 import { ApolloServer } from "@apollo/server";
 import { startStandaloneServer } from "@apollo/server/standalone";
-import { connectDB } from "./services/db/db.service";
-import mongoose, { Query } from "mongoose";
-import { userSchema } from "./services/db/schema.service";
+import { connectDB } from "./services/db/db.service.js";
+import mongoose from "mongoose";
+import { userSchema } from "./services/db/schema.service.js";
 
 connectDB();
 
@@ -28,16 +28,29 @@ const typeDefs = `
 
 const resolvers = {
   Query: {
-    getUsers: () => {
-      return UserModel.find({});
+    getUsers: async () => {
+      return await UserModel.find({});
     },
-    getUserById: (parent, args) => {
+    getUserById: async (parent, args) => {
       const id = args.id;
 
-      return UserModel.findById(id).exec();
+      return await UserModel.findById(id).exec();
     },
   },
-  Mutation: {},
+  Mutation: {
+    createUser: async (parent, args) => {
+      const { name, age, isMarried } = args;
+      const userData = {
+        id: mongoose.Types.ObjectId,
+        name,
+        age,
+        isMarried,
+      };
+      const newUser = new UserModel(userData);
+      const savedUser = await newUser.save();
+      return savedUser;
+    },
+  },
 };
 
 const server = new ApolloServer({ typeDefs, resolvers });
